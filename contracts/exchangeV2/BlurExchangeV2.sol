@@ -35,6 +35,8 @@ contract BlurExchangeV2 is
         __Ownable_init();
         __Reentrancy_init();
         // This function is in the Signatures.sol
+        // To verify if the address(this) == proxy address
+        // address(this) will be the address of the proxy if the contract is called through the proxy
         verifyDomain();
     }
 
@@ -57,6 +59,7 @@ contract BlurExchangeV2 is
         if (rate > _MAX_PROTOCOL_FEE_RATE) {
             revert ProtocolFeeTooHigh();
         }
+        // protocolFee stored in Validation.sol
         protocolFee = FeeRate(recipient, rate);
         emit NewProtocolFee(recipient, rate);
     }
@@ -75,6 +78,8 @@ contract BlurExchangeV2 is
      * @param oracle Address to set approval of
      * @param approved If the oracle should be approved or not
      */
+    // not sure what the oracle is for
+    // oracles stored in Signatures.sol
     function setOracle(address oracle, bool approved) external onlyOwner {
         if (approved) {
             oracles[oracle] = 1;
@@ -96,11 +101,17 @@ contract BlurExchangeV2 is
     /**
      * @notice Cancel listings by recording their fulfillment
      * @param cancels List of cancels to execute
+     * struct Cancel {
+        bytes32 hash;
+        uint256 index;
+        uint256 amount;
+    }
      */
     function cancelTrades(Cancel[] memory cancels) external {
         uint256 cancelsLength = cancels.length;
         for (uint256 i; i < cancelsLength; ) {
             Cancel memory cancel = cancels[i];
+            //amountTaken[user][orderHash][listingIndex] stored in Validation.sol
             amountTaken[msg.sender][cancel.hash][cancel.index] += cancel.amount;
             emit CancelTrade(
                 msg.sender,
@@ -119,6 +130,7 @@ contract BlurExchangeV2 is
      * @notice Cancels all orders by incrementing caller nonce
      */
     function incrementNonce() external {
+        //nonces stored in Signatures.sol
         emit NonceIncremented(msg.sender, ++nonces[msg.sender]);
     }
 
@@ -131,6 +143,8 @@ contract BlurExchangeV2 is
      * @param inputs Inputs for _takeAsk
      * @param oracleSignature Oracle signature of inputs
      */
+    // ask 賣出報價 （holder出價）
+    // 但是 buyer take
     function takeAsk(
         TakeAsk memory inputs,
         bytes calldata oracleSignature
@@ -140,6 +154,7 @@ contract BlurExchangeV2 is
         nonReentrant
         verifyOracleSignature(_hashCalldata(msg.sender), oracleSignature)
     {
+        //_takeAsk() function is in the Execution.sol
         _takeAsk(
             inputs.orders,
             inputs.exchanges,
@@ -154,6 +169,8 @@ contract BlurExchangeV2 is
      * @param inputs Inputs for _takeBid
      * @param oracleSignature Oracle signature of inputs
      */
+    // bid 買進報價 （出價）
+    // 但是 holder take
     function takeBid(
         TakeBid memory inputs,
         bytes calldata oracleSignature
@@ -431,6 +448,7 @@ contract BlurExchangeV2 is
     }
 
     /**
+     * 批量執行
      * @notice Take multiple asks; efficiently verifying and executing the transfers in bulk
      * @param orders List of orders
      * @param exchanges List of exchanges indicating the listing to take and the parameters to match it with
@@ -691,6 +709,7 @@ contract BlurExchangeV2 is
                 executionBatch,
                 ExecutionBatch_calldata_offset
             )
+
             mstore(add(calldataPointer, ExecutionBatch_taker_offset), taker)
             mstore(
                 add(calldataPointer, ExecutionBatch_orderType_offset),

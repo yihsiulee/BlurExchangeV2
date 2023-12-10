@@ -6,6 +6,7 @@ import {TakeAsk, TakeBid, TakeAskSingle, TakeBidSingle, FeeRate, Order, OrderTyp
 import {ISignatures} from "./interfaces/ISignatures.sol";
 
 abstract contract Signatures is ISignatures {
+    // To generate the type hashes
     string private constant _NAME = "Blur Exchange";
     string private constant _VERSION = "1.0";
 
@@ -45,6 +46,8 @@ abstract contract Signatures is ISignatures {
             eip712DomainTypehash,
             keccak256(bytes(_NAME)),
             keccak256(bytes(_VERSION)),
+            //address(this) will return the address of the proxy contract if called from the proxy contract
+            //to check the proxy address if the same as proxy address in the constructor
             address(this)
         );
         if (_DOMAIN_SEPARATOR != domainSeparator) {

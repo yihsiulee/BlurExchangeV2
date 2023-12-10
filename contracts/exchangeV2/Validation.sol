@@ -97,19 +97,24 @@ abstract contract Validation is IValidation, Signatures {
         Fees memory fees,
         uint256 signatureIndex
     ) internal view returns (bool) {
+        // hashOrder() is in Signatures.sol
+        // Create an EIP712 hash of an Order
         bytes32 orderHash = hashOrder(order, orderType);
 
         /* After hashing, the salt is no longer needed so we can store the order hash here. */
         order.salt = uint256(orderHash);
 
         return
+            // Verify EIP712 signature
             _verifyAuthorization(
                 order.trader,
                 orderHash,
                 signatures,
                 signatureIndex
             ) &&
+            // Check if an order has expired
             _checkLiveness(order) &&
+            // Check that the fees to be taken will not overflow the purchase price
             _checkFee(order.makerFee, fees);
     }
 
