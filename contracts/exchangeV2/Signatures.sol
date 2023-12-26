@@ -329,9 +329,14 @@ abstract contract Signatures is ISignatures {
         uint32 blockNumber;
         address oracle;
         assembly {
+            //  為oracleSignature表示取得偏移量
+            // oracleSignature.offset 是從 oracleSignature 結構中讀取 offset 屬性的值。並定義signatureOffset
+            // 這個 offset 屬性表示簽名在 calldata 中的偏移量。
             let signatureOffset := oracleSignature.offset
+            // 讀取signatureOffset這個位置的數據，並賦值給r
             r := calldataload(signatureOffset)
             s := calldataload(add(signatureOffset, OracleSignatures_s_offset))
+            //將calldataload(add(signatureOffset, OracleSignatures_v_offset))右移Bytes1_shift位
             v := shr(
                 Bytes1_shift,
                 calldataload(add(signatureOffset, OracleSignatures_v_offset))

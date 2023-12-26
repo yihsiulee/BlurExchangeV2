@@ -172,7 +172,9 @@ abstract contract Validation is IValidation, Signatures {
         Listing memory listing = exchange.listing;
         validListing = MerkleProof.verify(
             exchange.proof,
+            // input listingsRoot
             order.listingsRoot,
+            // create a hash of a Listing struct
             hashListing(listing)
         );
         Taker memory taker = exchange.taker;

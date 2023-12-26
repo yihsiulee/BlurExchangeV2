@@ -112,6 +112,7 @@ contract BlurExchangeV2 is
         for (uint256 i; i < cancelsLength; ) {
             Cancel memory cancel = cancels[i];
             //amountTaken[user][orderHash][listingIndex] stored in Validation.sol
+            // To count(add) the taken amounts of the order
             amountTaken[msg.sender][cancel.hash][cancel.index] += cancel.amount;
             emit CancelTrade(
                 msg.sender,
